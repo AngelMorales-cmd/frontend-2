@@ -7,6 +7,8 @@ const Contact = () => {
     subject: '',
     message: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState('');
 
   const handleChange = (e) => {
     setFormData({
@@ -15,10 +17,31 @@ const Contact = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert('📧 Mensaje enviado correctamente. Te contactaremos pronto.');
-    setFormData({ name: '', email: '', subject: '', message: '' });
+    setIsSubmitting(true);
+    setSubmitStatus('');
+
+    try {
+      const response = await fetch('https://formspree.io/f/mrbyrrbr', { // ← REEMPLAZA CON TU ID
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        setSubmitStatus('success');
+        setFormData({ name: '', email: '', subject: '', message: '' });
+      } else {
+        setSubmitStatus('error');
+      }
+    } catch (error) {
+      setSubmitStatus('error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -71,6 +94,34 @@ const Contact = () => {
         {/* Formulario de Contacto */}
         <div className="contact-form-container">
           <h2>✉️ Envíanos un mensaje</h2>
+          
+          {/* Mensajes de estado */}
+          {submitStatus === 'success' && (
+            <div style={{
+              background: 'var(--success-color)',
+              color: 'white',
+              padding: '1rem',
+              borderRadius: 'var(--border-radius)',
+              marginBottom: '1rem',
+              textAlign: 'center'
+            }}>
+              ✅ Mensaje enviado correctamente. Te contactaremos pronto.
+            </div>
+          )}
+          
+          {submitStatus === 'error' && (
+            <div style={{
+              background: 'var(--secondary-color)',
+              color: 'white',
+              padding: '1rem',
+              borderRadius: 'var(--border-radius)',
+              marginBottom: '1rem',
+              textAlign: 'center'
+            }}>
+              ❌ Error al enviar el mensaje. Intenta nuevamente.
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="contact-form">
             <div className="form-row">
               <div className="form-group">
@@ -83,6 +134,7 @@ const Contact = () => {
                   value={formData.name}
                   onChange={handleChange}
                   required
+                  disabled={isSubmitting}
                 />
               </div>
               
@@ -96,6 +148,7 @@ const Contact = () => {
                   value={formData.email}
                   onChange={handleChange}
                   required
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -110,6 +163,7 @@ const Contact = () => {
                 value={formData.subject}
                 onChange={handleChange}
                 required
+                disabled={isSubmitting}
               />
             </div>
             
@@ -124,11 +178,16 @@ const Contact = () => {
                 onChange={handleChange}
                 placeholder="Cuéntanos en qué podemos ayudarte..."
                 required
+                disabled={isSubmitting}
               ></textarea>
             </div>
             
-            <button type="submit" className="btn btn-primary btn-submit">
-              📤 Enviar Mensaje
+            <button 
+              type="submit" 
+              className="btn btn-primary btn-submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? '📤 Enviando...' : '📤 Enviar Mensaje'}
             </button>
           </form>
         </div>
